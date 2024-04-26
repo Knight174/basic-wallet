@@ -9,14 +9,22 @@ import {
   useBalance,
   useEnsName,
   useWriteContract,
+  useReadContract,
 } from 'wagmi';
 
 import { formatEther } from 'viem';
 
 import { GreetingABI } from '../abis';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+// 合约地址（交互时用）
+const contractAddress = '0x27Af3Bf3B5A3326a6F9285bC661932C992352Be0';
 
 const Home: NextPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [greeting, setGreeting] = useState('');
+
   const account: UseAccountReturnType = useAccount();
 
   const shortenAddr = (address: `0x${string}`) =>
@@ -33,22 +41,46 @@ const Home: NextPage = () => {
 
   const { writeContract } = useWriteContract();
 
-  const [inputValue, setInputValue] = useState('');
+  const { data: greetingString } = useReadContract({
+    address: contractAddress,
+    abi: GreetingABI,
+    functionName: 'greet',
+  });
 
+  useEffect(() => {
+    setGreeting(greetingString!);
+  }, [greetingString]);
+
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading]);
+
+  // 提交合约修改
   const handleClick = (greeting: string) => {
     if (!greeting) return;
-
-    writeContract({
-      address: '0x27Af3Bf3B5A3326a6F9285bC661932C992352Be0',
-      abi: GreetingABI,
-      functionName: 'setGreeting',
-      args: [greeting],
-    });
-
-    setInputValue('');
+    setLoading(true);
+    writeContract(
+      {
+        address: contractAddress,
+        abi: GreetingABI,
+        functionName: 'setGreeting',
+        args: [greeting],
+      },
+      {
+        onSuccess: (data) => {
+          console.log('成功了', data);
+          setInputValue('');
+          setLoading(false);
+        },
+        onError(error) {
+          console.log('失败了', error);
+          setLoading(false);
+        },
+      }
+    );
   };
 
-  if (isLoading) return <>Loading...</>;
+  if (loading) return <>Loading...</>;
 
   return (
     <div className={styles.container}>
@@ -81,11 +113,13 @@ const Home: NextPage = () => {
         </section>
 
         <section>
+          <h3>与合约交互</h3>
           <input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <button onClick={() => handleClick(inputValue)}>Greeting</button>
+          <button onClick={() => handleClick(inputValue)}>set greeting</button>
+          <p>get greeting: {greeting}</p>
         </section>
       </main>
 
