@@ -5,7 +5,6 @@ import styles from '../styles/Home.module.css';
 import {
   UseAccountReturnType,
   useAccount,
-  UseBalanceReturnType,
   useBalance,
   useEnsName,
   useWriteContract,
@@ -24,29 +23,32 @@ const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [greeting, setGreeting] = useState('');
-
-  const account: UseAccountReturnType = useAccount();
-
   const shortenAddr = (address: `0x${string}`) =>
     address?.slice(0, 4) + '...' + address?.slice(-4);
 
+  // 账户
+  const account: UseAccountReturnType = useAccount();
+  // 余额
   const { isLoading, data } = useBalance({
     address: account.address,
   });
-
+  // ens
   // const result = useEnsName({
   //   address: '0x00E5F7a306DfD157740d24BfC40b749313d8D110',
   // });
   // console.log(result); // 挂起，请求不到
 
-  const { writeContract } = useWriteContract();
-
-  const { data: greetingString } = useReadContract({
+  // 读取合约变量
+  const dataFromRead = useReadContract({
     address: contractAddress,
     abi: GreetingABI,
     functionName: 'greet',
   });
+  const greetingString = dataFromRead.data;
+  // 写入合约变量
+  const { writeContract } = useWriteContract();
 
+  // 副作用
   useEffect(() => {
     setGreeting(greetingString!);
   }, [greetingString]);
@@ -55,6 +57,7 @@ const Home: NextPage = () => {
     setLoading(isLoading);
   }, [isLoading]);
 
+  // methods
   // 提交合约修改
   const handleClick = (greeting: string) => {
     if (!greeting) return;
@@ -80,6 +83,7 @@ const Home: NextPage = () => {
     );
   };
 
+  // views
   if (loading) return <div className={styles.loading}>Loading...</div>;
 
   return (
