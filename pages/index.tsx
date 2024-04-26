@@ -80,7 +80,7 @@ const Home: NextPage = () => {
     );
   };
 
-  if (loading) return <>Loading...</>;
+  if (loading) return <div className={styles.loading}>Loading...</div>;
 
   return (
     <div className={styles.container}>
