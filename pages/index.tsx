@@ -8,9 +8,13 @@ import {
   UseBalanceReturnType,
   useBalance,
   useEnsName,
+  useWriteContract,
 } from 'wagmi';
 
 import { formatEther } from 'viem';
+
+import { GreetingABI } from '../abis';
+import { useState } from 'react';
 
 const Home: NextPage = () => {
   const account: UseAccountReturnType = useAccount();
@@ -22,10 +26,27 @@ const Home: NextPage = () => {
     address: account.address,
   });
 
-  const result = useEnsName({
-    address: '0x00E5F7a306DfD157740d24BfC40b749313d8D110',
-  });
-  console.log(result); // 挂起，请求不到
+  // const result = useEnsName({
+  //   address: '0x00E5F7a306DfD157740d24BfC40b749313d8D110',
+  // });
+  // console.log(result); // 挂起，请求不到
+
+  const { writeContract } = useWriteContract();
+
+  const [inputValue, setInputValue] = useState('');
+
+  const handleClick = (greeting: string) => {
+    if (!greeting) return;
+
+    writeContract({
+      address: '0x27Af3Bf3B5A3326a6F9285bC661932C992352Be0',
+      abi: GreetingABI,
+      functionName: 'setGreeting',
+      args: [greeting],
+    });
+
+    setInputValue('');
+  };
 
   if (isLoading) return <>Loading...</>;
 
@@ -60,7 +81,11 @@ const Home: NextPage = () => {
         </section>
 
         <section>
-          <h3></h3>
+          <input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+          <button onClick={() => handleClick(inputValue)}>Greeting</button>
         </section>
       </main>
 
